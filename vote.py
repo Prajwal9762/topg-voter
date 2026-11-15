@@ -1,41 +1,38 @@
+
+from pathlib import Path
 from playwright.sync_api import sync_playwright
-import time
 
 USERNAME = "SAROJGMG"
-URL = "https://topg.org/minecraft-servers/server-654317"
+SERVER_ID = "654317"
 
-with sync_playwright() as p:
+URL = f"https://topg.org/minecraft-servers/server-{SERVER_ID}#vote"
+PROFILE_DIR = str(Path(__file__).parent / ".topg_browser")
 
-    browser = p.chromium.launch(headless=True)
 
-    page = browser.new_page()
+def main():
+    with sync_playwright() as p:
+        context = p.chromium.launch_persistent_context(
+            user_data_dir=PROFILE_DIR,
+            headless=False,
+            viewport={"width": 1280, "height": 900}
+        )
 
-    print("Opening page...")
+        page = context.pages[0] if context.pages else context.new_page()
 
-    page.goto(URL, wait_until="domcontentloaded")
+        print("Opening TopG voting page...")
+        page.goto(URL, wait_until="domcontentloaded", timeout=60000)
 
-    time.sleep(5)
+        print(f"Server: {SERVER_ID}")
+        print(f"Minecraft username: {USERNAME}")
+        print("\nComplete the voting process manually.")
+        print("Log in if required and complete any verification.")
+        print("Press ENTER here when finished.")
 
-    print("Opening vote popup...")
+        input()
 
-    page.click("#openModal")
+        print("Closing browser...")
+        context.close()
 
-    time.sleep(3)
 
-    print("Filling username...")
-
-    page.fill("#game_user", USERNAME)
-
-    time.sleep(2)
-
-    print("Submitting vote...")
-
-    page.click("#submit")
-
-    time.sleep(10)
-
-    page.screenshot(path="vote_result.png")
-
-    print("Done!")
-
-    browser.close()
+if __name__ == "__main__":
+    main()
